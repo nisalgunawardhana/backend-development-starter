@@ -12,36 +12,10 @@ export class Item {
     this.description = description;
   }
 
-  static getAll() {
-    return items;
-  }
-
-  static getById(id) {
-    return items.find(item => item.id === id);
-  }
-
-  static create(name, description) {
-    const newItem = new Item(items.length + 1, name, description);
-    items.push(newItem);
-    fs.writeFileSync(dataPath, JSON.stringify(items, null, 2));
-    return newItem;
-  }
-
-  static update(id, name, description) {
-    const item = items.find(item => item.id === id);
-    if (!item) return null;
-    if (name) item.name = name;
-    if (description) item.description = description;
-    fs.writeFileSync(dataPath, JSON.stringify(items, null, 2));
-    return item;
-  }
-
-  static delete(id) {
-    const index = items.findIndex(item => item.id === id);
-    if (index === -1) return false;
-    items.splice(index, 1);
-    fs.writeFileSync(dataPath, JSON.stringify(items, null, 2));
-    return true;
+  validate() {
+    if (!this.name || !this.description) {
+      throw new Error('Name and description are required');
+    }
   }
 }
 

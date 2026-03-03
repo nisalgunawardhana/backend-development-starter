@@ -1,66 +1,69 @@
-import { Item } from '../models/item.js';
+import ItemService from '../services/itemService.js';
+import { successResponse, errorResponse } from '../utils/responseHandler.js';
+import { NotFoundError, ValidationError } from '../utils/errors.js';
 
 // Get all items
-export const getAllItems = (req, res) => {
-  //try-catch block to handle potential errors when fetching items  
+export async function getAllItems(req, res) {
   try {
-    const items = Item.getAll();
-    res.status(200).json(items);
+    const items = await ItemService.getAllItems();
+    successResponse(res, items);
   } catch (error) {
-    res.status(500).json({ message: 'Internal Server Error' });
+    errorResponse(res, error);
   }
-};
+}
 
 // Get a single item by ID
-export const getItemById = (req, res) => {
+export async function getItemById(req, res) {
   try {
-    const item = Item.getById(parseInt(req.params.id));
-    if (!item) {
-      return res.status(404).json({ message: 'Item not found' });
-    }
-    res.status(200).json(item);
+    const item = await ItemService.getItemById(parseInt(req.params.id));
+    successResponse(res, item);
   } catch (error) {
-    res.status(500).json({ message: 'Internal Server Error' });
+    if (error instanceof NotFoundError) {
+      errorResponse(res, error, 404);
+    } else {
+      errorResponse(res, error);
+    }
   }
-};
+}
 
 // Create a new item
-export const createItem = (req, res) => {
+export async function createItem(req, res) {
   try {
-    const { name, description } = req.body;
-    if (!name || !description) {
-      return res.status(400).json({ message: 'Name and description are required' });
-    }
-    const newItem = Item.create(name, description);
-    res.status(201).json(newItem);
+    const newItem = await ItemService.createItem(req.body);
+    successResponse(res, newItem, 201);
   } catch (error) {
-    res.status(500).json({ message: 'Internal Server Error' });
+    if (error instanceof ValidationError) {
+      errorResponse(res, error, 400);
+    } else {
+      errorResponse(res, error);
+    }
   }
-};
+}
 
 // Update an item by ID
-export const updateItem = (req, res) => {
+export async function updateItem(req, res) {
   try {
-    const { name, description } = req.body;
-    const updatedItem = Item.update(parseInt(req.params.id), name, description);
-    if (!updatedItem) {
-      return res.status(404).json({ message: 'Item not found' });
-    }
-    res.status(200).json(updatedItem);
+    const updatedItem = await ItemService.updateItem(parseInt(req.params.id), req.body);
+    successResponse(res, updatedItem);
   } catch (error) {
-    res.status(500).json({ message: 'Internal Server Error' });
+    if (error instanceof NotFoundError) {
+      errorResponse(res, error, 404);
+    } else {
+      errorResponse(res, error);
+    }
   }
-};
+}
 
 // Delete an item by ID
-export const deleteItem = (req, res) => {
+export async function deleteItem(req, res) {
   try {
-    const deleted = Item.delete(parseInt(req.params.id));
-    if (!deleted) {
-      return res.status(404).json({ message: 'Item not found' });
-    }
-    res.status(204).send();
+    await ItemService.deleteItem(parseInt(req.params.id));
+    successResponse(res, null, 204);
   } catch (error) {
-    res.status(500).json({ message: 'Internal Server Error' });
+    if (error instanceof NotFoundError) {
+      errorResponse(res, error, 404);
+    } else {
+      errorResponse(res, error);
+    }
   }
-};
+}

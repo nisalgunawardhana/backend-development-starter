@@ -1,3 +1,4 @@
+import express from 'express';
 import {
   getAllItems,
   getItemById,
@@ -5,9 +6,8 @@ import {
   updateItem,
   deleteItem,
 } from '../controllers/itemController.js';
-import { Router } from 'express';
 
-const router = Router();
+const router = express.Router();
 
 router.get('/', getAllItems);
 router.get('/:id', getItemById);
