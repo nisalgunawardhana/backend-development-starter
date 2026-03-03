@@ -15,11 +15,13 @@ export async function getAllItems(req, res) {
 // Get a single item by ID
 export async function getItemById(req, res) {
   try {
-    const item = await ItemService.getItemById(parseInt(req.params.id));
+    const item = await ItemService.getItemById(req.params.id);
     successResponse(res, item);
   } catch (error) {
     if (error instanceof NotFoundError) {
       errorResponse(res, error, 404);
+    } else if (error instanceof ValidationError) {
+      errorResponse(res, error, 400);
     } else {
       errorResponse(res, error);
     }
@@ -43,11 +45,13 @@ export async function createItem(req, res) {
 // Update an item by ID
 export async function updateItem(req, res) {
   try {
-    const updatedItem = await ItemService.updateItem(parseInt(req.params.id), req.body);
+    const updatedItem = await ItemService.updateItem(req.params.id, req.body);
     successResponse(res, updatedItem);
   } catch (error) {
     if (error instanceof NotFoundError) {
       errorResponse(res, error, 404);
+    } else if (error instanceof ValidationError) {
+      errorResponse(res, error, 400);
     } else {
       errorResponse(res, error);
     }
@@ -57,11 +61,13 @@ export async function updateItem(req, res) {
 // Delete an item by ID
 export async function deleteItem(req, res) {
   try {
-    await ItemService.deleteItem(parseInt(req.params.id));
+    await ItemService.deleteItem(req.params.id);
     successResponse(res, null, 204);
   } catch (error) {
     if (error instanceof NotFoundError) {
       errorResponse(res, error, 404);
+    } else if (error instanceof ValidationError) {
+      errorResponse(res, error, 400);
     } else {
       errorResponse(res, error);
     }

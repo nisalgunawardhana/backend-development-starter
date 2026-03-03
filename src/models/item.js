@@ -1,10 +1,3 @@
-import fs from 'fs';
-import path from 'path';
-
-const dataPath = path.join(process.cwd(), 'data/data.json');
-let rawData = fs.readFileSync(dataPath, 'utf-8');
-let items = JSON.parse(rawData);
-
 export class Item {
   constructor(id, name, description) {
     this.id = id;

@@ -1,13 +1,14 @@
 # Backend Development Starter
 
 ## Project Overview
-This project demonstrates a backend application built using **Clean Architecture** principles. It provides CRUD (Create, Read, Update, Delete) operations for managing items, with proper error handling and standardized responses. This project is designed for beginners to understand modern backend development practices.
+This project demonstrates a backend application built using **Clean Architecture** principles with **MongoDB** integration. It provides CRUD (Create, Read, Update, Delete) operations for managing items, with proper error handling and standardized responses. This project is designed for beginners to understand modern backend development practices.
 
 ### Key Features:
 - **Clean Architecture**: Separation of concerns into layers (Model, Repository, Service, Controller, Router).
+- **MongoDB Integration**: NoSQL database for data persistence with proper connection management.
 - **Error Handling**: Custom error classes and standardized error responses.
 - **Async/Await**: All asynchronous operations are handled using `async/await`.
-- **Data Persistence**: Data is stored in a `data.json` file and managed through the repository layer.
+- **Environment Configuration**: Secure credential management using environment variables.
 - **Beginner Friendly**: Clear separation of responsibilities and best practices.
 
 ---
@@ -55,18 +56,29 @@ export class Item {
 }
 ```
 
-### 2. **Repository Layer** 💾
-**Purpose**: Handles all data access and persistence operations.
+### 2. **Repository Layer** �️
+**Purpose**: Handles all data access and persistence operations with MongoDB.
 
 **Responsibilities**:
-- Read data from storage (`data.json`)
-- Write data to storage
-- Provide CRUD operations interface
-- Handle data conversion between storage format and application format
+- Connect to MongoDB database
+- Perform CRUD operations on MongoDB collections
+- Convert between MongoDB documents and application models
+- Handle MongoDB-specific operations (ObjectId, queries, etc.)
 
-**Why it's important**: If you change from JSON file to database, only this layer needs to change.
+**Why it's important**: If you change from MongoDB to PostgreSQL, only this layer needs to change.
 
 **File**: `src/repositories/itemRepository.js`
+
+**Example**:
+```javascript
+export class ItemRepository {
+  static async getAll() {
+    const collection = database.getCollection('items');
+    const items = await collection.find({}).toArray();
+    return items.map(item => new Item(item._id.toString(), item.name, item.description));
+  }
+}
+```
 
 ### 3. **Service Layer** ⚙️
 **Purpose**: Contains business logic and coordinates between repository and controller.
@@ -113,6 +125,118 @@ export class Item {
 **Files**:
 - `src/utils/errors.js`: Custom error classes
 - `src/utils/responseHandler.js`: Standardized API responses
+- `src/utils/database.js`: MongoDB connection and management
+
+**Database Utility Example**:
+```javascript
+class Database {
+  async connect() {
+    this.client = new MongoClient(process.env.MONGODB_URI);
+    await this.client.connect();
+    this.db = this.client.db(process.env.DB_NAME);
+  }
+
+  getCollection(name) {
+    return this.getDb().collection(name);
+  }
+}
+```
+
+---
+
+## MongoDB Integration 🍃
+
+**What is MongoDB?**
+MongoDB is a NoSQL document database that stores data in flexible, JSON-like documents. It's perfect for applications that need to store and retrieve complex data structures.
+
+**Why MongoDB?**
+- **Flexible Schema**: No need to define rigid table structures
+- **JSON-like Documents**: Natural fit for JavaScript applications
+- **Scalable**: Handles large amounts of data efficiently
+- **Developer Friendly**: Easy to learn and use
+
+### MongoDB Setup Guide
+
+**Option 1: Local MongoDB Installation**
+
+1. **Install MongoDB**:
+   ```bash
+   # macOS (using Homebrew)
+   brew tap mongodb/brew
+   brew install mongodb-community
+   
+   # Start MongoDB service
+   brew services start mongodb-community
+   
+   # Windows: Download from https://www.mongodb.com/try/download/community
+   # Linux: Follow instructions at https://docs.mongodb.com/manual/installation/
+   ```
+
+2. **Verify Installation**:
+   ```bash
+   mongosh  # Opens MongoDB shell
+   ```
+
+**Option 2: MongoDB Atlas (Cloud) - Recommended for Beginners**
+
+1. **Create Account**: Go to [MongoDB Atlas](https://www.mongodb.com/atlas)
+2. **Create Cluster**: Follow the free tier setup
+3. **Get Connection String**: Copy the connection string provided
+4. **Whitelist IP**: Add your IP address to allow connections
+
+### Environment Configuration
+
+1. **Copy Environment File**:
+   ```bash
+   cp .env.sample .env
+   ```
+
+2. **Update .env File**:
+   ```env
+   # For Local MongoDB
+   MONGODB_URI=mongodb://localhost:27017/backend_starter
+   
+   # For MongoDB Atlas
+   MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/backend_starter
+   
+   DB_NAME=backend_starter
+   PORT=3000
+   ```
+
+### How MongoDB Works in This Project
+
+**Document Structure**:
+```javascript
+// MongoDB Document (what gets stored)
+{
+  _id: ObjectId("507f1f77bcf86cd799439011"),
+  name: "Sample Item",
+  description: "This is a sample item",
+  createdAt: ISODate("2026-03-03T10:30:00Z"),
+  updatedAt: ISODate("2026-03-03T10:30:00Z")
+}
+
+// Application Model (what your code uses)
+class Item {
+  constructor(id, name, description) {
+    this.id = id;  // "507f1f77bcf86cd799439011"
+    this.name = name;
+    this.description = description;
+  }
+}
+```
+
+**CRUD Operations Explained**:
+
+1. **Create**: Insert new document into `items` collection
+2. **Read**: Find documents using queries (`find`, `findOne`)
+3. **Update**: Modify existing documents using `updateOne`, `findOneAndUpdate`
+4. **Delete**: Remove documents using `deleteOne`
+
+**Connection Management**:
+- **Singleton Pattern**: One database connection shared across the application
+- **Error Handling**: Proper connection error handling and recovery
+- **Graceful Shutdown**: Proper database disconnection on app termination
 
 ---
 
@@ -232,22 +356,84 @@ static async getItemById(id) {
 ---
 
 ## How to Run the Project
-1. Clone the repository:
+
+### Prerequisites
+- **Node.js** (v16 or higher)
+- **MongoDB** (Local installation or Atlas account)
+
+### Setup Steps
+
+1. **Clone the repository**:
    ```bash
    git clone https://github.com/nisalgunawardhana/backend-development-starter.git
-   ```
-2. Navigate to the project directory:
-   ```bash
    cd backend-development-starter
    ```
-3. Install dependencies:
+
+2. **Install dependencies**:
    ```bash
    npm install
    ```
-4. Start the development server:
+
+3. **Setup MongoDB**:
+   - **Option A**: Install MongoDB locally (see MongoDB Setup Guide above)
+   - **Option B**: Create a free MongoDB Atlas cluster
+
+4. **Configure Environment**:
+   ```bash
+   # Copy environment template
+   cp .env.sample .env
+   
+   # Edit .env with your MongoDB connection details
+   # Update MONGODB_URI with your connection string
+   ```
+
+5. **Start the development server**:
    ```bash
    npm run dev
    ```
+
+6. **Test the API**:
+   ```bash
+   # The server will start on http://localhost:3000
+   # Test with tools like Postman or curl
+   
+   curl http://localhost:3000/api/items
+   ```
+
+### 🧪 API Testing with Postman
+
+**Quick Setup**:
+1. **Import Collection**: Import `postman/Backend_Development_Starter_API.postman_collection.json`
+2. **Import Environment**: Import `postman/Backend_Starter_Development.postman_environment.json`
+3. **Select Environment**: Choose "Backend Starter - Development" in Postman
+4. **Start Testing**: Run requests in the recommended order
+
+**Available Test Requests**:
+- ✅ Health Check (`GET /health`)
+- 📋 Get All Items (`GET /api/items`)
+- 🔍 Get Item by ID (`GET /api/items/:id`)
+- ➕ Create Item (`POST /api/items`)
+- ✏️ Update Item (`PUT /api/items/:id`)
+- 🗑️ Delete Item (`DELETE /api/items/:id`)
+
+**See detailed Postman guide**: [`postman/README.md`](postman/README.md)
+
+### Troubleshooting
+
+**Common Issues**:
+
+1. **MongoDB Connection Failed**:
+   - Check if MongoDB is running locally
+   - Verify MONGODB_URI in .env file
+   - For Atlas: Check network access settings
+
+2. **Port Already in Use**:
+   - Change PORT in .env file
+   - Kill process using the port: `lsof -ti:3000 | xargs kill`
+
+3. **Environment Variables Not Loaded**:
+   - Ensure .env file exists in project root
+   - Check for typos in environment variable names
 
 ---
 
@@ -265,14 +451,40 @@ static async getItemById(id) {
 
 ---
 
-## Example Data
-The application uses `data.json` to store item data. Example:
+## Example Data Structure
+
+The application stores data in MongoDB collections. Here's what the data looks like:
+
+**MongoDB Document (stored in database)**:
 ```json
-[
-  { "id": 1, "name": "Sample Item", "description": "First example item" },
-  { "id": 2, "name": "Second Item", "description": "Another example item" }
-]
+{
+  "_id": "6580a1b2c3d4e5f6a7b8c9d0",
+  "name": "Sample Item",
+  "description": "This is a sample item for demonstration",
+  "createdAt": "2026-03-03T10:30:00.000Z",
+  "updatedAt": "2026-03-03T10:30:00.000Z"
+}
 ```
+
+**API Response (what clients receive)**:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "6580a1b2c3d4e5f6a7b8c9d0",
+      "name": "Sample Item",
+      "description": "This is a sample item for demonstration"
+    }
+  ]
+}
+```
+
+**Key Differences from JSON File Approach**:
+- **IDs**: MongoDB uses ObjectId (24-character hex string) instead of incrementing numbers
+- **Timestamps**: Automatic `createdAt` and `updatedAt` fields
+- **Validation**: Built-in MongoDB schema validation
+- **Scalability**: Can handle millions of documents efficiently
 
 ---
 

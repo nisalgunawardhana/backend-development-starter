@@ -8,6 +8,11 @@ export default class ItemService {
   }
 
   static async getItemById(id) {
+    // Validate MongoDB ObjectId format
+    if (!id || id.length !== 24) {
+      throw new ValidationError('Invalid item ID format');
+    }
+    
     const item = await ItemRepository.getById(id);
     if (!item) {
       throw new NotFoundError('Item not found');
@@ -26,6 +31,11 @@ export default class ItemService {
   }
 
   static async updateItem(id, data) {
+    // Validate MongoDB ObjectId format
+    if (!id || id.length !== 24) {
+      throw new ValidationError('Invalid item ID format');
+    }
+    
     const updatedItem = await ItemRepository.update(id, data);
     if (!updatedItem) {
       throw new NotFoundError('Item not found');
@@ -34,6 +44,11 @@ export default class ItemService {
   }
 
   static async deleteItem(id) {
+    // Validate MongoDB ObjectId format
+    if (!id || id.length !== 24) {
+      throw new ValidationError('Invalid item ID format');
+    }
+    
     const deleted = await ItemRepository.delete(id);
     if (!deleted) {
       throw new NotFoundError('Item not found');

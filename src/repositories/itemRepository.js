@@ -1,15 +1,17 @@
-import fs from 'fs/promises';
-import path from 'path';
+import { ObjectId } from 'mongodb';
+import database from '../utils/database.js';
 import { Item } from '../models/item.js';
 
-const dataPath = path.join(process.cwd(), 'data/data.json');
-
 export class ItemRepository {
+  static getCollection() {
+    return database.getCollection('items');
+  }
+
   static async getAll() {
     try {
-      const rawData = await fs.readFile(dataPath, 'utf-8');
-      const items = JSON.parse(rawData);
-      return items.map(item => new Item(item.id, item.name, item.description));
+      const collection = this.getCollection();
+      const items = await collection.find({}).toArray();
+      return items.map(item => new Item(item._id.toString(), item.name, item.description));
     } catch (error) {
       throw new Error('Failed to fetch items');
     }
@@ -17,8 +19,12 @@ export class ItemRepository {
 
   static async getById(id) {
     try {
-      const items = await this.getAll();
-      return items.find(item => item.id === id) || null;
+      const collection = this.getCollection();
+      const objectId = new ObjectId(id);
+      const item = await collection.findOne({ _id: objectId });
+      
+      if (!item) return null;
+      return new Item(item._id.toString(), item.name, item.description);
     } catch (error) {
       throw new Error('Failed to fetch item by ID');
     }
@@ -26,11 +32,16 @@ export class ItemRepository {
 
   static async create(data) {
     try {
-      const items = await this.getAll();
-      const newItem = new Item(items.length + 1, data.name, data.description);
-      items.push(newItem);
-      await fs.writeFile(dataPath, JSON.stringify(items, null, 2));
-      return newItem;
+      const collection = this.getCollection();
+      const newItem = {
+        name: data.name,
+        description: data.description,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      const result = await collection.insertOne(newItem);
+      return new Item(result.insertedId.toString(), newItem.name, newItem.description);
     } catch (error) {
       throw new Error('Failed to create item');
     }
@@ -38,14 +49,22 @@ export class ItemRepository {
 
   static async update(id, data) {
     try {
-      const items = await this.getAll();
-      const itemIndex = items.findIndex(item => item.id === id);
-      if (itemIndex === -1) return null;
-
-      const updatedItem = { ...items[itemIndex], ...data };
-      items[itemIndex] = updatedItem;
-      await fs.writeFile(dataPath, JSON.stringify(items, null, 2));
-      return updatedItem;
+      const collection = this.getCollection();
+      const objectId = new ObjectId(id);
+      
+      const updateData = {
+        ...data,
+        updatedAt: new Date()
+      };
+      
+      const result = await collection.findOneAndUpdate(
+        { _id: objectId },
+        { $set: updateData },
+        { returnDocument: 'after' }
+      );
+      
+      if (!result.value) return null;
+      return new Item(result.value._id.toString(), result.value.name, result.value.description);
     } catch (error) {
       throw new Error('Failed to update item');
     }
@@ -53,12 +72,11 @@ export class ItemRepository {
 
   static async delete(id) {
     try {
-      const items = await this.getAll();
-      const filteredItems = items.filter(item => item.id !== id);
-      if (filteredItems.length === items.length) return false;
-
-      await fs.writeFile(dataPath, JSON.stringify(filteredItems, null, 2));
-      return true;
+      const collection = this.getCollection();
+      const objectId = new ObjectId(id);
+      
+      const result = await collection.deleteOne({ _id: objectId });
+      return result.deletedCount > 0;
     } catch (error) {
       throw new Error('Failed to delete item');
     }
