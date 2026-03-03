@@ -1,0 +1,22 @@
+# Node dependencies and builds
+node_modules/
+dist/
+build/
+
+# Env and local config
+.env
+.env.local
+.DS_Store
+
+# Logs and coverage
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+logs/
+*.log
+coverage/
+
+# IDE/editor
+.vscode/
+.idea/

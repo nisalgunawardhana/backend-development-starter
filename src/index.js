@@ -1,14 +1,11 @@
 import express from 'express';
-import itemsRouter from './routes/item.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
-app.use('/items', itemsRouter);
-
+// Simple Hello World endpoint
 app.get('/', (req, res) => {
-  res.send('Item API');
+  res.send('Hello World!');
 });
 
 app.listen(PORT, () => {
