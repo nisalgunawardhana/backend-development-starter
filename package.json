@@ -1,0 +1,27 @@
+{
+  "name": "backend-development-starter",
+  "version": "1.0.0",
+  "description": "Minimal Express setup using ES modules.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nisalgunawardhana/backend-development-starter.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nisalgunawardhana/backend-development-starter/issues"
+  },
+  "homepage": "https://github.com/nisalgunawardhana/backend-development-starter#readme",
+  "dependencies": {
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "nodemon": "^3.1.14"
+  }
+}
